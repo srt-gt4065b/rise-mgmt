@@ -1,764 +1,85 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { initializeApp } from 'firebase/app';
-import { getAuth, signInAnonymously, onAuthStateChanged, User, signInWithCustomToken } from 'firebase/auth';
-import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, serverTimestamp, getDocs } from 'firebase/firestore';
-import { 
-  LayoutDashboard, 
-  CalendarRange, 
-  Plus, 
-  Save, 
-  Trash2, 
-  ChevronLeft, 
-  ChevronRight, 
-  PieChart, 
-  TrendingUp, 
-  AlertCircle,
-  CheckCircle2,
-  FileText,
-  MoreVertical,
-  X
-} from 'lucide-react';
-
-// --- Firebase Configuration & Initialization ---
-const firebaseConfig = {
-  apiKey: "AIzaSyAzLM-AkgRvGwluyyFDnJOFzP1uOjuPwMY",
-  authDomain: "rise-mgmt.firebaseapp.com",
-  projectId: "rise-mgmt",
-  storageBucket: "rise-mgmt.firebasestorage.app",
-  messagingSenderId: "115181331450",
-  appId: "1:115181331450:web:d94636a430ccd069b1ba43"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-rise-app';
-
-// --- Types ---
-type MonthlyStatus = 'planned' | 'in-progress' | 'completed' | 'delayed' | 'none';
-
-interface MonthlyData {
-  status: MonthlyStatus;
-  progress: number; // 0-100
-  note?: string;
-}
-
-interface Task {
-  id: string;
-  title: string;       // 과제명
-  leader: string;      // 책임자
-  department: string;  // 소속(학과/부서)
-  budget: number;      // 사업비 (단위: 만원)
-  kpi: string;         // 핵심성과지표
-  startDate: string;
-  endDate: string;
-  monthlyData: Record<string, MonthlyData>; // key: "YYYY-MM"
-  createdAt?: any;
-}
-
-// --- Utils ---
-const generateMonthRange = (start: string, end: string) => {
-  const dates = [];
-  let current = new Date(start);
-  const endDate = new Date(end);
-
-  while (current <= endDate) {
-    const year = current.getFullYear();
-    const month = String(current.getMonth() + 1).padStart(2, '0');
-    dates.push(`${year}-${month}`);
-    current.setMonth(current.getMonth() + 1);
-  }
-  return dates;
-};
-
-// RISE Project Period: 2026.03 ~ 2027.12
-const PROJECT_MONTHS = generateMonthRange('2026-03-01', '2027-12-01');
-
-const getStatusColor = (status: MonthlyStatus) => {
-  switch (status) {
-    case 'completed': return 'bg-green-500 text-white';
-    case 'in-progress': return 'bg-blue-500 text-white';
-    case 'delayed': return 'bg-red-500 text-white';
-    case 'planned': return 'bg-gray-300 text-gray-700';
-    default: return 'bg-gray-50 text-gray-300';
-  }
-};
-
-const getStatusLabel = (status: MonthlyStatus) => {
-  switch (status) {
-    case 'completed': return '완료';
-    case 'in-progress': return '진행중';
-    case 'delayed': return '지연';
-    case 'planned': return '계획';
-    default: return '-';
-  }
-};
-
-// --- Sample Data ---
-const SAMPLE_TASKS = [
+[
   {
-    title: '미래모빌리티 핵심부품 기술개발 및 인재양성',
-    leader: '김철수 교수',
-    department: '기계공학부',
-    budget: 15000,
-    kpi: '핵심기술 특허출원 3건, 관련학과 취업률 85% 달성, 산학 공동 프로젝트 5건 수행',
-    startDate: '2026-03-01',
-    endDate: '2027-12-31',
-    monthlyData: {
-      '2026-03': { status: 'planned', progress: 10, note: '사업 계획 수립 및 참여기업 모집' },
-      '2026-04': { status: 'in-progress', progress: 20, note: '1차 산학협력 워크숍 개최' },
-      '2026-05': { status: 'in-progress', progress: 30, note: '핵심 기술 기초 연구 시작' },
-      '2026-06': { status: 'delayed', progress: 30, note: '장비 도입 지연으로 인한 일정 순연' },
-    },
+    "title": "RISE 융합 캡스톤 디자인 (기업연계)",
+    "leader": "김창업 교수",
+    "department": "산학협력단",
+    "budget": 8000,
+    "kpi": "시제품 제작 20건, 특허출원 5건, 기업 애로기술 해결 10건",
+    "startDate": "2026-03-01",
+    "endDate": "2026-12-31",
+    "monthlyData": {
+      "2026-03": { "status": "planned", "progress": 0, "note": "참여 학생 및 기업 모집" },
+      "2026-04": { "status": "planned", "progress": 0, "note": "팀 매칭 및 주제 선정" },
+      "2026-06": { "status": "planned", "progress": 0, "note": "중간 점검 및 멘토링" },
+      "2026-11": { "status": "planned", "progress": 0, "note": "최종 성과 전시회" }
+    }
   },
   {
-    title: '지역특화 바이오헬스케어 혁신 생태계 구축',
-    leader: '이영희 교수',
-    department: '생명과학과',
-    budget: 12000,
-    kpi: '바이오 스타트업 육성 2개사, 기술이전 2건, 지역 특화 인재 양성 30명',
-    startDate: '2026-03-01',
-    endDate: '2027-12-31',
-    monthlyData: {
-      '2026-03': { status: 'completed', progress: 100, note: '사업단 구성 완료 및 킥오프 미팅' },
-      '2026-04': { status: 'in-progress', progress: 30, note: '지역 바이오 기업 수요 조사 실시' },
-      '2026-05': { status: 'in-progress', progress: 50, note: '교육 커리큘럼 개발 및 강사진 구성' },
-    },
+    "title": "대전 공공기술 활용 아이디어 경진대회",
+    "leader": "이혁신 팀장",
+    "department": "창업지원단",
+    "budget": 3500,
+    "kpi": "참가팀 50팀, 수상작 사업화 연계 3건",
+    "startDate": "2026-05-01",
+    "endDate": "2026-10-31",
+    "monthlyData": {
+      "2026-05": { "status": "planned", "progress": 0, "note": "공공데이터/기술 리스트업" },
+      "2026-08": { "status": "planned", "progress": 0, "note": "경진대회 예선 심사" },
+      "2026-10": { "status": "planned", "progress": 0, "note": "본선 및 시상식" }
+    }
   },
   {
-    title: 'AI 기반 지능형 반도체 공정 전문인력 양성',
-    leader: '박민수 교수',
-    department: '전자공학과',
-    budget: 18000,
-    kpi: '반도체 공정 전문인력 50명 배출, 관련 기업 인턴십 100% 연계, 산학 공동 연구 논문 2편',
-    startDate: '2026-03-01',
-    endDate: '2027-12-31',
-    monthlyData: {
-      '2026-03': { status: 'planned', progress: 0, note: '' },
-      '2026-04': { status: 'planned', progress: 0, note: '' },
-    },
+    "title": "표준 현장실습 및 취업 연계 지원",
+    "leader": "박취업 센터장",
+    "department": "현장실습지원센터",
+    "budget": 12000,
+    "kpi": "실습생 100명 파견, 실습 후 취업 연계율 40%",
+    "startDate": "2026-03-01",
+    "endDate": "2027-12-31",
+    "monthlyData": {
+      "2026-03": { "status": "in-progress", "progress": 20, "note": "1학기 실습생 모집 및 사전교육" },
+      "2026-07": { "status": "planned", "progress": 0, "note": "하계 단기 실습 운영" },
+      "2026-09": { "status": "planned", "progress": 0, "note": "2학기 실습생 파견" },
+      "2027-01": { "status": "planned", "progress": 0, "note": "동계 실습 운영" }
+    }
   },
-];
-
-
-// --- Components ---
-
-const StatusBadge = ({ status }: { status: MonthlyStatus }) => (
-  <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(status).replace('bg-', 'bg-opacity-20 text-').replace('text-white', 'text-gray-800')}`}>
-    {getStatusLabel(status)}
-  </span>
-);
-
-// --- Main App Component ---
-export default function RiseProjectManager() {
-  const [user, setUser] = useState<User | null>(null);
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<'dashboard' | 'timeline' | 'list'>('dashboard');
-  
-  // Modal States
-  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
-  const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
-  const [selectedCell, setSelectedCell] = useState<{taskId: string, month: string} | null>(null);
-
-  // Form States
-  const [formData, setFormData] = useState({
-    title: '',
-    leader: '',
-    department: '',
-    budget: 0,
-    kpi: '',
-  });
-
-  const [statusUpdateData, setStatusUpdateData] = useState<{status: MonthlyStatus, progress: number, note: string}>({
-    status: 'planned',
-    progress: 0,
-    note: ''
-  });
-
-  // --- Auth & Data Fetching ---
-  useEffect(() => {
-    const initAuth = async () => {
-      try {
-        // 사용자 지정 DB를 사용하므로 환경 제공 토큰(customToken) 대신 익명 로그인을 사용합니다.
-        await signInAnonymously(auth);
-      } catch (error) {
-        console.error("Auth Error:", error);
-      }
-    };
-    initAuth();
-
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    if (!user) return;
-
-    const tasksCollectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'rise_tasks');
-    const q = query(tasksCollectionRef);
-    
-    const unsubscribe = onSnapshot(q, async (snapshot) => {
-      // If the collection is empty, add sample data
-      if (snapshot.empty) {
-        setLoading(true);
-        const promises = SAMPLE_TASKS.map(task => 
-          addDoc(tasksCollectionRef, {
-            ...task,
-            createdAt: serverTimestamp()
-          })
-        );
-        await Promise.all(promises);
-        // The snapshot will update automatically after adding docs, so we don't need to do anything else here.
-        return;
-      }
-
-      const taskData: Task[] = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as Task));
-      setTasks(taskData);
-      setLoading(false);
-    }, (error) => {
-      console.error("Firestore Error:", error);
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, [user]);
-
-  // --- CRUD Operations ---
-  const handleSaveTask = async () => {
-    if (!user) return;
-    
-    try {
-      if (editingTask) {
-        const taskRef = doc(db, 'artifacts', appId, 'public', 'data', 'rise_tasks', editingTask.id);
-        await updateDoc(taskRef, {
-          title: formData.title,
-          leader: formData.leader,
-          department: formData.department,
-          budget: Number(formData.budget),
-          kpi: formData.kpi
-        });
-      } else {
-        await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'rise_tasks'), {
-          ...formData,
-          budget: Number(formData.budget),
-          startDate: '2026-03-01',
-          endDate: '2027-12-31',
-          monthlyData: {},
-          createdAt: serverTimestamp()
-        });
-      }
-      closeTaskModal();
-    } catch (e) {
-      console.error("Error saving task:", e);
-      alert("저장 중 오류가 발생했습니다.");
+  {
+    "title": "글로벌 공동교육 과정 (해외 대학 연계)",
+    "leader": "정글로벌 교수",
+    "department": "국제교류원",
+    "budget": 15000,
+    "kpi": "해외 대학 학점 교류 20명, 글로벌 프로젝트 2건",
+    "startDate": "2026-03-01",
+    "endDate": "2027-02-28",
+    "monthlyData": {
+      "2026-03": { "status": "planned", "progress": 10, "note": "협정 대학 커리큘럼 조율" },
+      "2026-07": { "status": "planned", "progress": 0, "note": "하계 글로벌 캠프 파견" }
     }
-  };
-
-  const handleDeleteTask = async (id: string) => {
-    if (!confirm('정말 삭제하시겠습니까?')) return;
-    try {
-      await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'rise_tasks', id));
-    } catch (e) {
-      console.error("Delete error:", e);
+  },
+  {
+    "title": "출연연 연계 특화 교과 운영 (바이오/반도체)",
+    "leader": "최연구 박사",
+    "department": "융합대학원",
+    "budget": 6000,
+    "kpi": "전문가 특강 10회, 출연연 인턴십 5명",
+    "startDate": "2026-03-01",
+    "endDate": "2026-12-31",
+    "monthlyData": {
+      "2026-04": { "status": "planned", "progress": 0, "note": "연구원 겸임교수 위촉" },
+      "2026-09": { "status": "planned", "progress": 0, "note": "2학기 심화 과정 개설" }
     }
-  };
-
-  const handleUpdateStatus = async () => {
-    if (!selectedCell || !user) return;
-    
-    try {
-      const task = tasks.find(t => t.id === selectedCell.taskId);
-      if (!task) return;
-
-      const updatedMonthlyData = {
-        ...task.monthlyData,
-        [selectedCell.month]: {
-          status: statusUpdateData.status,
-          progress: Number(statusUpdateData.progress),
-          note: statusUpdateData.note
-        }
-      };
-
-      const taskRef = doc(db, 'artifacts', appId, 'public', 'data', 'rise_tasks', selectedCell.taskId);
-      await updateDoc(taskRef, { monthlyData: updatedMonthlyData });
-      
-      setIsUpdateModalOpen(false);
-      setSelectedCell(null);
-    } catch (e) {
-      console.error("Status update error:", e);
+  },
+  {
+    "title": "지역 정주형 취업 동아리 육성",
+    "leader": "한지역 과장",
+    "department": "대학일자리본부",
+    "budget": 2500,
+    "kpi": "동아리 20개 팀 운영, 지역 기업 취업 30명",
+    "startDate": "2026-03-01",
+    "endDate": "2027-12-31",
+    "monthlyData": {
+      "2026-03": { "status": "completed", "progress": 100, "note": "동아리 모집 및 선정 완료" },
+      "2026-05": { "status": "in-progress", "progress": 40, "note": "기업 탐방 및 멘토링 진행" }
     }
-  };
-
-  // --- UI Helpers ---
-  const openTaskModal = (task?: Task) => {
-    if (task) {
-      setEditingTask(task);
-      setFormData({
-        title: task.title,
-        leader: task.leader,
-        department: task.department,
-        budget: task.budget,
-        kpi: task.kpi
-      });
-    } else {
-      setEditingTask(null);
-      setFormData({
-        title: '',
-        leader: '',
-        department: '',
-        budget: 0,
-        kpi: ''
-      });
-    }
-    setIsTaskModalOpen(true);
-  };
-
-  const closeTaskModal = () => {
-    setIsTaskModalOpen(false);
-    setEditingTask(null);
-  };
-
-  const openStatusModal = (task: Task, month: string) => {
-    const currentData = task.monthlyData?.[month] || { status: 'none', progress: 0, note: '' };
-    setSelectedCell({ taskId: task.id, month });
-    setStatusUpdateData({
-      status: currentData.status === 'none' ? 'planned' : currentData.status,
-      progress: currentData.progress || 0,
-      note: currentData.note || ''
-    });
-    setIsUpdateModalOpen(true);
-  };
-
-  // --- Statistics Calculation ---
-  const stats = useMemo(() => {
-    const totalTasks = tasks.length;
-    const totalBudget = tasks.reduce((sum, t) => sum + (t.budget || 0), 0);
-    
-    // Calculate simple avg progress based on latest month with data
-    let totalProgressSum = 0;
-    let activeTaskCount = 0;
-    let delayedCount = 0;
-
-    tasks.forEach(task => {
-      const months = Object.keys(task.monthlyData || {}).sort();
-      if (months.length > 0) {
-        const lastMonth = months[months.length - 1];
-        const data = task.monthlyData[lastMonth];
-        totalProgressSum += data.progress;
-        if (data.status === 'delayed') delayedCount++;
-        activeTaskCount++;
-      }
-    });
-
-    const avgProgress = activeTaskCount > 0 ? (totalProgressSum / activeTaskCount).toFixed(1) : 0;
-
-    return { totalTasks, totalBudget, avgProgress, delayedCount };
-  }, [tasks]);
-
-
-  // --- Render Views ---
-
-  const renderDashboard = () => (
-    <div className="space-y-6 animate-fade-in">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-          <div className="flex items-center space-x-3 text-slate-600 mb-2">
-            <LayoutDashboard size={20} className="text-blue-600" />
-            <span className="font-medium">총 과제 수</span>
-          </div>
-          <div className="text-3xl font-bold text-slate-800">{stats.totalTasks} <span className="text-sm font-normal text-slate-500">건</span></div>
-        </div>
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-          <div className="flex items-center space-x-3 text-slate-600 mb-2">
-            <PieChart size={20} className="text-green-600" />
-            <span className="font-medium">총 예산 규모</span>
-          </div>
-          <div className="text-3xl font-bold text-slate-800">{stats.totalBudget.toLocaleString()} <span className="text-sm font-normal text-slate-500">만원</span></div>
-        </div>
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-          <div className="flex items-center space-x-3 text-slate-600 mb-2">
-            <TrendingUp size={20} className="text-indigo-600" />
-            <span className="font-medium">평균 진도율</span>
-          </div>
-          <div className="text-3xl font-bold text-slate-800">{stats.avgProgress}%</div>
-        </div>
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-          <div className="flex items-center space-x-3 text-slate-600 mb-2">
-            <AlertCircle size={20} className="text-red-500" />
-            <span className="font-medium">지연 과제</span>
-          </div>
-          <div className={`text-3xl font-bold ${stats.delayedCount > 0 ? 'text-red-600' : 'text-slate-800'}`}>{stats.delayedCount} <span className="text-sm font-normal text-slate-500">건</span></div>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-        <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center">
-          <CheckCircle2 className="mr-2 text-blue-600" size={20} />
-          최근 업데이트 현황
-        </h3>
-        {tasks.length === 0 ? (
-          <div className="text-center py-8 text-slate-400">등록된 과제가 없습니다.</div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-slate-200 text-slate-500 text-sm">
-                  <th className="py-3 font-medium">과제명</th>
-                  <th className="py-3 font-medium">책임자</th>
-                  <th className="py-3 font-medium">부서</th>
-                  <th className="py-3 font-medium">최근 상태</th>
-                  <th className="py-3 font-medium">진도율</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tasks.slice(0, 5).map(task => {
-                  const months = Object.keys(task.monthlyData || {}).sort();
-                  const lastMonth = months.length > 0 ? months[months.length - 1] : null;
-                  const data = lastMonth ? task.monthlyData[lastMonth] : null;
-
-                  return (
-                    <tr key={task.id} className="border-b border-slate-100 hover:bg-slate-50">
-                      <td className="py-3 text-slate-800 font-medium">{task.title}</td>
-                      <td className="py-3 text-slate-600">{task.leader}</td>
-                      <td className="py-3 text-slate-600">{task.department}</td>
-                      <td className="py-3">
-                        {data ? <StatusBadge status={data.status} /> : <span className="text-slate-400 text-sm">-</span>}
-                      </td>
-                      <td className="py-3">
-                        {data ? (
-                          <div className="flex items-center">
-                            <div className="w-24 h-2 bg-slate-200 rounded-full mr-2">
-                              <div className="h-full bg-blue-600 rounded-full" style={{ width: `${data.progress}%` }}></div>
-                            </div>
-                            <span className="text-sm text-slate-600">{data.progress}%</span>
-                          </div>
-                        ) : <span className="text-slate-400 text-sm">0%</span>}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-
-  const renderTimeline = () => (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col h-[calc(100vh-200px)] animate-fade-in">
-      <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50 rounded-t-xl">
-        <div className="flex items-center space-x-2">
-          <CalendarRange className="text-blue-600" />
-          <h3 className="font-bold text-slate-800">월별 상세 진도표 (2026.03 ~ 2027.12)</h3>
-        </div>
-        <div className="flex space-x-2 text-xs text-slate-500">
-          <div className="flex items-center"><div className="w-3 h-3 bg-gray-300 rounded mr-1"></div>계획</div>
-          <div className="flex items-center"><div className="w-3 h-3 bg-blue-500 rounded mr-1"></div>진행</div>
-          <div className="flex items-center"><div className="w-3 h-3 bg-green-500 rounded mr-1"></div>완료</div>
-          <div className="flex items-center"><div className="w-3 h-3 bg-red-500 rounded mr-1"></div>지연</div>
-        </div>
-      </div>
-      
-      <div className="flex-1 overflow-auto relative">
-        <table className="w-max border-collapse">
-          <thead className="sticky top-0 z-20 bg-white shadow-sm">
-            <tr>
-              <th className="sticky left-0 z-30 bg-white border-b border-r border-slate-200 p-3 w-64 text-left font-bold text-slate-700 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
-                과제명
-              </th>
-              {PROJECT_MONTHS.map(month => (
-                <th key={month} className="border-b border-r border-slate-200 p-2 min-w-[80px] text-center text-xs font-medium text-slate-600 bg-slate-50">
-                  {month.replace('-', '.')}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {tasks.map(task => (
-              <tr key={task.id} className="hover:bg-slate-50">
-                <td className="sticky left-0 z-10 bg-white border-b border-r border-slate-200 p-3 w-64 text-sm font-medium text-slate-800 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] truncate group">
-                  <div className="flex flex-col">
-                    <span className="truncate" title={task.title}>{task.title}</span>
-                    <span className="text-xs text-slate-400">{task.leader}</span>
-                  </div>
-                </td>
-                {PROJECT_MONTHS.map(month => {
-                  const data = task.monthlyData?.[month];
-                  const status = data?.status || 'none';
-                  
-                  return (
-                    <td 
-                      key={`${task.id}-${month}`} 
-                      className="border-b border-r border-slate-200 p-1 text-center relative cursor-pointer hover:bg-slate-100 transition-colors"
-                      onClick={() => openStatusModal(task, month)}
-                    >
-                      {status !== 'none' ? (
-                        <div className={`w-full h-8 rounded flex items-center justify-center text-xs text-white shadow-sm ${getStatusColor(status)}`}>
-                          {data?.progress > 0 && `${data.progress}%`}
-                        </div>
-                      ) : (
-                        <div className="w-full h-8 rounded border border-dashed border-slate-200 flex items-center justify-center text-slate-300 text-[10px] hover:border-blue-300">
-                          +
-                        </div>
-                      )}
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-
-  const renderList = () => (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden animate-fade-in">
-      <div className="overflow-x-auto">
-        <table className="w-full text-left">
-          <thead className="bg-slate-50 border-b border-slate-200">
-            <tr>
-              <th className="p-4 font-semibold text-slate-600">과제명</th>
-              <th className="p-4 font-semibold text-slate-600">소속/책임자</th>
-              <th className="p-4 font-semibold text-slate-600">예산 (만원)</th>
-              <th className="p-4 font-semibold text-slate-600">KPI</th>
-              <th className="p-4 font-semibold text-slate-600 text-right">관리</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {tasks.map(task => (
-              <tr key={task.id} className="hover:bg-slate-50 transition-colors">
-                <td className="p-4 font-medium text-slate-800">{task.title}</td>
-                <td className="p-4 text-slate-600">
-                  <div className="text-sm">{task.department}</div>
-                  <div className="text-xs text-slate-400">{task.leader}</div>
-                </td>
-                <td className="p-4 text-slate-600 font-mono">{task.budget.toLocaleString()}</td>
-                <td className="p-4 text-slate-600 text-sm max-w-xs truncate" title={task.kpi}>{task.kpi}</td>
-                <td className="p-4 text-right space-x-2">
-                  <button 
-                    onClick={() => openTaskModal(task)}
-                    className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                  >
-                    <FileText size={18} />
-                  </button>
-                  <button 
-                    onClick={() => handleDeleteTask(task.id)}
-                    className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {tasks.length === 0 && (
-              <tr>
-                <td colSpan={5} className="p-8 text-center text-slate-400">
-                  등록된 과제가 없습니다. 우측 상단 버튼을 눌러 추가해주세요.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-
-  return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-800">
-      {/* Header */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="bg-blue-600 text-white p-2 rounded-lg font-bold shadow-lg shadow-blue-200">RISE</div>
-            <h1 className="text-xl font-bold text-slate-800 hidden md:block">단일과제 진도관리 시스템</h1>
-            <span className="bg-slate-100 text-slate-500 text-xs px-2 py-1 rounded">2026.03 ~ 2027.12</span>
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            <nav className="flex bg-slate-100 p-1 rounded-lg mr-4">
-              <button 
-                onClick={() => setView('dashboard')}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${view === 'dashboard' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-              >
-                대시보드
-              </button>
-              <button 
-                onClick={() => setView('timeline')}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${view === 'timeline' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-              >
-                월별 진도표
-              </button>
-              <button 
-                onClick={() => setView('list')}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${view === 'list' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-              >
-                과제 관리
-              </button>
-            </nav>
-            <button 
-              onClick={() => openTaskModal()}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center shadow-md transition-colors"
-            >
-              <Plus size={16} className="mr-1.5" /> 과제 추가
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        {loading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          </div>
-        ) : (
-          <>
-            {view === 'dashboard' && renderDashboard()}
-            {view === 'timeline' && renderTimeline()}
-            {view === 'list' && renderList()}
-          </>
-        )}
-      </main>
-
-      {/* Task Edit/Create Modal */}
-      {isTaskModalOpen && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden">
-            <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-              <h3 className="font-bold text-lg text-slate-800">{editingTask ? '과제 정보 수정' : '새 과제 등록'}</h3>
-              <button onClick={closeTaskModal} className="text-slate-400 hover:text-slate-600"><X size={20}/></button>
-            </div>
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">과제명</label>
-                <input 
-                  type="text" 
-                  value={formData.title} 
-                  onChange={(e) => setFormData({...formData, title: e.target.value})}
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow"
-                  placeholder="예: 미래모빌리티 인재양성"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">소속(학과/부서)</label>
-                  <input 
-                    type="text" 
-                    value={formData.department} 
-                    onChange={(e) => setFormData({...formData, department: e.target.value})}
-                    className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                    placeholder="기계공학과"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">책임자</label>
-                  <input 
-                    type="text" 
-                    value={formData.leader} 
-                    onChange={(e) => setFormData({...formData, leader: e.target.value})}
-                    className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                    placeholder="홍길동"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">사업비 (만원)</label>
-                <input 
-                  type="number" 
-                  value={formData.budget} 
-                  onChange={(e) => setFormData({...formData, budget: Number(e.target.value)})}
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">핵심성과지표 (KPI)</label>
-                <textarea 
-                  value={formData.kpi} 
-                  onChange={(e) => setFormData({...formData, kpi: e.target.value})}
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none h-24 resize-none"
-                  placeholder="예: 취업률 80% 달성, 산학협력 프로젝트 5건"
-                />
-              </div>
-            </div>
-            <div className="p-5 border-t border-slate-100 flex justify-end space-x-2 bg-slate-50">
-              <button onClick={closeTaskModal} className="px-4 py-2 text-slate-600 hover:bg-slate-200 rounded-lg font-medium transition-colors">취소</button>
-              <button onClick={handleSaveTask} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium shadow-md transition-colors">저장</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Monthly Status Modal */}
-      {isUpdateModalOpen && selectedCell && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden">
-            <div className="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
-              <div>
-                <h3 className="font-bold text-slate-800">{selectedCell.month.replace('-', '년 ')}월 진도 관리</h3>
-                <p className="text-xs text-slate-500 truncate max-w-[200px]">{tasks.find(t => t.id === selectedCell.taskId)?.title}</p>
-              </div>
-              <button onClick={() => setIsUpdateModalOpen(false)} className="text-slate-400 hover:text-slate-600"><X size={18}/></button>
-            </div>
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">진행 상태</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {(['planned', 'in-progress', 'completed', 'delayed'] as MonthlyStatus[]).map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => setStatusUpdateData({...statusUpdateData, status: s})}
-                      className={`py-2 px-3 rounded-lg text-sm font-medium border transition-all ${
-                        statusUpdateData.status === s 
-                          ? 'border-blue-500 bg-blue-50 text-blue-700 ring-1 ring-blue-500' 
-                          : 'border-slate-200 text-slate-600 hover:bg-slate-50'
-                      }`}
-                    >
-                      {getStatusLabel(s)}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">진도율 (%)</label>
-                <div className="flex items-center space-x-4">
-                  <input 
-                    type="range" 
-                    min="0" 
-                    max="100" 
-                    step="10"
-                    value={statusUpdateData.progress}
-                    onChange={(e) => setStatusUpdateData({...statusUpdateData, progress: Number(e.target.value)})}
-                    className="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-                  />
-                  <span className="w-12 text-right font-bold text-blue-600">{statusUpdateData.progress}%</span>
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">비고 / 특이사항</label>
-                <textarea 
-                  value={statusUpdateData.note} 
-                  onChange={(e) => setStatusUpdateData({...statusUpdateData, note: e.target.value})}
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none h-20 resize-none"
-                  placeholder="예산 집행 지연 사유 등"
-                />
-              </div>
-            </div>
-            <div className="p-4 border-t border-slate-100 flex justify-end space-x-2 bg-slate-50">
-              <button onClick={() => setIsUpdateModalOpen(false)} className="px-4 py-2 text-slate-600 hover:bg-slate-200 rounded-lg text-sm font-medium">취소</button>
-              <button onClick={handleUpdateStatus} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium shadow-md">업데이트</button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
+  }
+]
