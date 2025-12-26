@@ -1,85 +1,462 @@
-[
-  {
-    "title": "RISE 융합 캡스톤 디자인 (기업연계)",
-    "leader": "김창업 교수",
-    "department": "산학협력단",
-    "budget": 8000,
-    "kpi": "시제품 제작 20건, 특허출원 5건, 기업 애로기술 해결 10건",
-    "startDate": "2026-03-01",
-    "endDate": "2026-12-31",
-    "monthlyData": {
-      "2026-03": { "status": "planned", "progress": 0, "note": "참여 학생 및 기업 모집" },
-      "2026-04": { "status": "planned", "progress": 0, "note": "팀 매칭 및 주제 선정" },
-      "2026-06": { "status": "planned", "progress": 0, "note": "중간 점검 및 멘토링" },
-      "2026-11": { "status": "planned", "progress": 0, "note": "최종 성과 전시회" }
-    }
-  },
-  {
-    "title": "대전 공공기술 활용 아이디어 경진대회",
-    "leader": "이혁신 팀장",
-    "department": "창업지원단",
-    "budget": 3500,
-    "kpi": "참가팀 50팀, 수상작 사업화 연계 3건",
-    "startDate": "2026-05-01",
-    "endDate": "2026-10-31",
-    "monthlyData": {
-      "2026-05": { "status": "planned", "progress": 0, "note": "공공데이터/기술 리스트업" },
-      "2026-08": { "status": "planned", "progress": 0, "note": "경진대회 예선 심사" },
-      "2026-10": { "status": "planned", "progress": 0, "note": "본선 및 시상식" }
-    }
-  },
-  {
-    "title": "표준 현장실습 및 취업 연계 지원",
-    "leader": "박취업 센터장",
-    "department": "현장실습지원센터",
-    "budget": 12000,
-    "kpi": "실습생 100명 파견, 실습 후 취업 연계율 40%",
-    "startDate": "2026-03-01",
-    "endDate": "2027-12-31",
-    "monthlyData": {
-      "2026-03": { "status": "in-progress", "progress": 20, "note": "1학기 실습생 모집 및 사전교육" },
-      "2026-07": { "status": "planned", "progress": 0, "note": "하계 단기 실습 운영" },
-      "2026-09": { "status": "planned", "progress": 0, "note": "2학기 실습생 파견" },
-      "2027-01": { "status": "planned", "progress": 0, "note": "동계 실습 운영" }
-    }
-  },
-  {
-    "title": "글로벌 공동교육 과정 (해외 대학 연계)",
-    "leader": "정글로벌 교수",
-    "department": "국제교류원",
-    "budget": 15000,
-    "kpi": "해외 대학 학점 교류 20명, 글로벌 프로젝트 2건",
-    "startDate": "2026-03-01",
-    "endDate": "2027-02-28",
-    "monthlyData": {
-      "2026-03": { "status": "planned", "progress": 10, "note": "협정 대학 커리큘럼 조율" },
-      "2026-07": { "status": "planned", "progress": 0, "note": "하계 글로벌 캠프 파견" }
-    }
-  },
-  {
-    "title": "출연연 연계 특화 교과 운영 (바이오/반도체)",
-    "leader": "최연구 박사",
-    "department": "융합대학원",
-    "budget": 6000,
-    "kpi": "전문가 특강 10회, 출연연 인턴십 5명",
-    "startDate": "2026-03-01",
-    "endDate": "2026-12-31",
-    "monthlyData": {
-      "2026-04": { "status": "planned", "progress": 0, "note": "연구원 겸임교수 위촉" },
-      "2026-09": { "status": "planned", "progress": 0, "note": "2학기 심화 과정 개설" }
-    }
-  },
-  {
-    "title": "지역 정주형 취업 동아리 육성",
-    "leader": "한지역 과장",
-    "department": "대학일자리본부",
-    "budget": 2500,
-    "kpi": "동아리 20개 팀 운영, 지역 기업 취업 30명",
-    "startDate": "2026-03-01",
-    "endDate": "2027-12-31",
-    "monthlyData": {
-      "2026-03": { "status": "completed", "progress": 100, "note": "동아리 모집 및 선정 완료" },
-      "2026-05": { "status": "in-progress", "progress": 40, "note": "기업 탐방 및 멘토링 진행" }
-    }
-  }
-]
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RISE 사업 진도관리 시스템</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel (JSX 실행용) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- 스타일 정의 -->
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        body { font-family: 'Pretendard', sans-serif; }
+        
+        /* 스크롤바 커스텀 */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .animate-fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <div id="root"></div>
+
+    <!-- React 로직 -->
+    <script type="text/babel" data-type="module">
+        import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, serverTimestamp, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        
+        // Lucide React Icons (ESM)
+        import { 
+            LayoutDashboard, CalendarRange, Plus, Save, Trash2, 
+            ChevronLeft, ChevronRight, PieChart, TrendingUp, 
+            AlertCircle, CheckCircle2, FileText, MoreVertical, 
+            X, UploadCloud, RefreshCw 
+        } from "https://esm.sh/lucide-react@0.292.0?external=react";
+
+        const React = window.React;
+        const { useState, useEffect, useMemo } = React;
+
+        // --- Firebase Configuration ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyAzLM-AkgRvGwluyyFDnJOFzP1uOjuPwMY",
+            authDomain: "rise-mgmt.firebaseapp.com",
+            projectId: "rise-mgmt",
+            storageBucket: "rise-mgmt.firebasestorage.app",
+            messagingSenderId: "115181331450",
+            appId: "1:115181331450:web:d94636a430ccd069b1ba43"
+        };
+
+        // 앱 초기화
+        let app;
+        try {
+            app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+        } catch(e) { console.error("Firebase init error", e); }
+        
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        // 독립 실행환경이므로 고정된 ID 사용
+        const appId = 'rise-standalone-app';
+
+        // --- Utils ---
+        const generateMonthRange = (start, end) => {
+            const dates = [];
+            let current = new Date(start);
+            const endDate = new Date(end);
+            while (current <= endDate) {
+                const year = current.getFullYear();
+                const month = String(current.getMonth() + 1).padStart(2, '0');
+                dates.push(`${year}-${month}`);
+                current.setMonth(current.getMonth() + 1);
+            }
+            return dates;
+        };
+
+        const PROJECT_MONTHS = generateMonthRange('2026-03-01', '2027-12-01');
+
+        const getStatusColor = (status) => {
+            switch (status) {
+                case 'completed': return 'bg-green-500 text-white';
+                case 'in-progress': return 'bg-blue-500 text-white';
+                case 'delayed': return 'bg-red-500 text-white';
+                case 'planned': return 'bg-gray-300 text-gray-700';
+                default: return 'bg-gray-50 text-gray-300';
+            }
+        };
+
+        const getStatusLabel = (status) => {
+            switch (status) {
+                case 'completed': return '완료';
+                case 'in-progress': return '진행중';
+                case 'delayed': return '지연';
+                case 'planned': return '계획';
+                default: return '-';
+            }
+        };
+
+        // --- PDF Source Data ---
+        const PDF_SOURCE_DATA = [
+            {
+                "title": "RISE 융합 캡스톤 디자인 (기업연계)",
+                "leader": "김창업 교수",
+                "department": "산학협력단",
+                "budget": 8000,
+                "kpi": "시제품 제작 20건, 특허출원 5건, 기업 애로기술 해결 10건",
+                "startDate": "2026-03-01",
+                "endDate": "2026-12-31",
+                "monthlyData": {
+                "2026-03": { "status": "planned", "progress": 0, "note": "참여 학생 및 기업 모집" },
+                "2026-04": { "status": "planned", "progress": 0, "note": "팀 매칭 및 주제 선정" },
+                "2026-06": { "status": "planned", "progress": 0, "note": "중간 점검 및 멘토링" },
+                "2026-11": { "status": "planned", "progress": 0, "note": "최종 성과 전시회" }
+                }
+            },
+            {
+                "title": "대전 공공기술 활용 아이디어 경진대회",
+                "leader": "이혁신 팀장",
+                "department": "창업지원단",
+                "budget": 3500,
+                "kpi": "참가팀 50팀, 수상작 사업화 연계 3건",
+                "startDate": "2026-05-01",
+                "endDate": "2026-10-31",
+                "monthlyData": {
+                "2026-05": { "status": "planned", "progress": 0, "note": "공공데이터/기술 리스트업" },
+                "2026-08": { "status": "planned", "progress": 0, "note": "경진대회 예선 심사" },
+                "2026-10": { "status": "planned", "progress": 0, "note": "본선 및 시상식" }
+                }
+            },
+            {
+                "title": "표준 현장실습 및 취업 연계 지원",
+                "leader": "박취업 센터장",
+                "department": "현장실습지원센터",
+                "budget": 12000,
+                "kpi": "실습생 100명 파견, 실습 후 취업 연계율 40%",
+                "startDate": "2026-03-01",
+                "endDate": "2027-12-31",
+                "monthlyData": {
+                "2026-03": { "status": "in-progress", "progress": 20, "note": "1학기 실습생 모집 및 사전교육" },
+                "2026-07": { "status": "planned", "progress": 0, "note": "하계 단기 실습 운영" },
+                "2026-09": { "status": "planned", "progress": 0, "note": "2학기 실습생 파견" },
+                "2027-01": { "status": "planned", "progress": 0, "note": "동계 실습 운영" }
+                }
+            },
+            {
+                "title": "글로벌 공동교육 과정 (해외 대학 연계)",
+                "leader": "정글로벌 교수",
+                "department": "국제교류원",
+                "budget": 15000,
+                "kpi": "해외 대학 학점 교류 20명, 글로벌 프로젝트 2건",
+                "startDate": "2026-03-01",
+                "endDate": "2027-02-28",
+                "monthlyData": {
+                "2026-03": { "status": "planned", "progress": 10, "note": "협정 대학 커리큘럼 조율" },
+                "2026-07": { "status": "planned", "progress": 0, "note": "하계 글로벌 캠프 파견" }
+                }
+            },
+            {
+                "title": "출연연 연계 특화 교과 운영 (바이오/반도체)",
+                "leader": "최연구 박사",
+                "department": "융합대학원",
+                "budget": 6000,
+                "kpi": "전문가 특강 10회, 출연연 인턴십 5명",
+                "startDate": "2026-03-01",
+                "endDate": "2026-12-31",
+                "monthlyData": {
+                "2026-04": { "status": "planned", "progress": 0, "note": "연구원 겸임교수 위촉" },
+                "2026-09": { "status": "planned", "progress": 0, "note": "2학기 심화 과정 개설" }
+                }
+            },
+            {
+                "title": "지역 정주형 취업 동아리 육성",
+                "leader": "한지역 과장",
+                "department": "대학일자리본부",
+                "budget": 2500,
+                "kpi": "동아리 20개 팀 운영, 지역 기업 취업 30명",
+                "startDate": "2026-03-01",
+                "endDate": "2027-12-31",
+                "monthlyData": {
+                "2026-03": { "status": "completed", "progress": 100, "note": "동아리 모집 및 선정 완료" },
+                "2026-05": { "status": "in-progress", "progress": 40, "note": "기업 탐방 및 멘토링 진행" }
+                }
+            }
+        ];
+
+        // --- Components ---
+        const StatusBadge = ({ status }) => (
+            <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(status).replace('bg-', 'bg-opacity-20 text-').replace('text-white', 'text-gray-800')}`}>
+                {getStatusLabel(status)}
+            </span>
+        );
+
+        function RiseProjectManager() {
+            const [user, setUser] = useState(null);
+            const [tasks, setTasks] = useState([]);
+            const [loading, setLoading] = useState(true);
+            const [errorMsg, setErrorMsg] = useState(null);
+            const [view, setView] = useState('dashboard');
+            
+            // Modal States
+            const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+            const [editingTask, setEditingTask] = useState(null);
+            const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+            const [selectedCell, setSelectedCell] = useState(null);
+
+            // Form States
+            const [formData, setFormData] = useState({
+                title: '', leader: '', department: '', budget: 0, kpi: '',
+            });
+
+            const [statusUpdateData, setStatusUpdateData] = useState({
+                status: 'planned', progress: 0, note: ''
+            });
+
+            // --- Auth & Data Fetching ---
+            useEffect(() => {
+                const initAuth = async () => {
+                    try {
+                        await signInAnonymously(auth);
+                    } catch (error) {
+                        console.error("Auth Error:", error);
+                        setErrorMsg(`로그인 실패: ${error.message}`);
+                        setLoading(false);
+                    }
+                };
+                initAuth();
+
+                const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+                    setUser(currentUser);
+                });
+                return () => unsubscribe();
+            }, []);
+
+            useEffect(() => {
+                if (!user) return;
+                
+                const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'rise_tasks'));
+                
+                const unsubscribe = onSnapshot(q, (snapshot) => {
+                    const taskData = snapshot.docs.map(doc => ({
+                        id: doc.id,
+                        ...doc.data()
+                    }));
+                    setTasks(taskData);
+                    setLoading(false);
+                    setErrorMsg(null);
+                }, (error) => {
+                    console.error("Firestore Error:", error);
+                    setErrorMsg(`데이터 로드 오류: ${error.message} (권한을 확인하세요)`);
+                    setLoading(false);
+                });
+
+                return () => unsubscribe();
+            }, [user]);
+
+            // --- Handlers ---
+            const uploadPdfDataToDb = async () => {
+                if (!user) { alert("로그인 중입니다..."); return; }
+                if (!confirm("PDF 기반 과제 데이터를 업로드하시겠습니까?")) return;
+
+                setLoading(true);
+                try {
+                    const batch = writeBatch(db);
+                    const collectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'rise_tasks');
+                    
+                    PDF_SOURCE_DATA.forEach((data) => {
+                        const newDoc = doc(collectionRef);
+                        batch.set(newDoc, { ...data, createdAt: serverTimestamp() });
+                    });
+                    
+                    await batch.commit();
+                    alert("업로드 완료!");
+                } catch (e) {
+                    alert(`실패: ${e.message}`);
+                } finally {
+                    setLoading(false);
+                }
+            };
+            
+            const clearAllData = async () => {
+                if(!confirm("모든 데이터를 삭제하시겠습니까?")) return;
+                setLoading(true);
+                try {
+                    const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'rise_tasks'));
+                    const snapshot = await getDocs(q);
+                    const batch = writeBatch(db);
+                    snapshot.docs.forEach((d) => batch.delete(d.ref));
+                    await batch.commit();
+                    alert("삭제 완료");
+                } catch(e) {
+                    alert(`삭제 실패: ${e.message}`);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const handleSaveTask = async () => {
+                if (!user) return;
+                try {
+                    const collectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'rise_tasks');
+                    if (editingTask) {
+                        await updateDoc(doc(collectionRef, editingTask.id), {
+                            ...formData, budget: Number(formData.budget)
+                        });
+                    } else {
+                        await addDoc(collectionRef, {
+                            ...formData,
+                            budget: Number(formData.budget),
+                            startDate: '2026-03-01', endDate: '2027-12-31',
+                            monthlyData: {}, createdAt: serverTimestamp()
+                        });
+                    }
+                    closeTaskModal();
+                } catch (e) { alert("저장 실패"); }
+            };
+
+            const handleDeleteTask = async (id) => {
+                if (!confirm('삭제하시겠습니까?')) return;
+                try {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'rise_tasks', id));
+                } catch (e) { console.error(e); }
+            };
+
+            const handleUpdateStatus = async () => {
+                if (!selectedCell) return;
+                try {
+                    const task = tasks.find(t => t.id === selectedCell.taskId);
+                    const updatedMonthlyData = {
+                        ...task.monthlyData,
+                        [selectedCell.month]: {
+                            status: statusUpdateData.status,
+                            progress: Number(statusUpdateData.progress),
+                            note: statusUpdateData.note
+                        }
+                    };
+                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'rise_tasks', selectedCell.taskId), {
+                        monthlyData: updatedMonthlyData
+                    });
+                    setIsUpdateModalOpen(false);
+                    setSelectedCell(null);
+                } catch (e) { console.error(e); }
+            };
+
+            // --- Helpers ---
+            const openTaskModal = (task = null) => {
+                setEditingTask(task);
+                setFormData(task ? {
+                    title: task.title, leader: task.leader, department: task.department,
+                    budget: task.budget, kpi: task.kpi
+                } : { title: '', leader: '', department: '', budget: 0, kpi: '' });
+                setIsTaskModalOpen(true);
+            };
+
+            const closeTaskModal = () => {
+                setIsTaskModalOpen(false);
+                setEditingTask(null);
+            };
+
+            const openStatusModal = (task, month) => {
+                const currentData = task.monthlyData?.[month] || { status: 'none', progress: 0, note: '' };
+                setSelectedCell({ taskId: task.id, month });
+                setStatusUpdateData({
+                    status: currentData.status === 'none' ? 'planned' : currentData.status,
+                    progress: currentData.progress || 0,
+                    note: currentData.note || ''
+                });
+                setIsUpdateModalOpen(true);
+            };
+
+            const stats = useMemo(() => {
+                const totalTasks = tasks.length;
+                const totalBudget = tasks.reduce((sum, t) => sum + (t.budget || 0), 0);
+                let totalProgressSum = 0;
+                let activeTaskCount = 0;
+                let delayedCount = 0;
+
+                tasks.forEach(task => {
+                    const months = Object.keys(task.monthlyData || {}).sort();
+                    if (months.length > 0) {
+                        const lastMonth = months[months.length - 1];
+                        const data = task.monthlyData[lastMonth];
+                        totalProgressSum += data.progress;
+                        if (data.status === 'delayed') delayedCount++;
+                        activeTaskCount++;
+                    }
+                });
+                const avgProgress = activeTaskCount > 0 ? (totalProgressSum / activeTaskCount).toFixed(1) : 0;
+                return { totalTasks, totalBudget, avgProgress, delayedCount };
+            }, [tasks]);
+
+            // --- Renders ---
+            const renderDashboard = () => (
+                <div className="space-y-6 animate-fade-in">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                            <div className="flex items-center space-x-3 text-slate-600 mb-2">
+                                <LayoutDashboard size={20} className="text-blue-600" />
+                                <span className="font-medium">총 과제 수</span>
+                            </div>
+                            <div className="text-3xl font-bold text-slate-800">{stats.totalTasks} <span className="text-sm font-normal text-slate-500">건</span></div>
+                        </div>
+                        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                            <div className="flex items-center space-x-3 text-slate-600 mb-2">
+                                <PieChart size={20} className="text-green-600" />
+                                <span className="font-medium">총 예산 규모</span>
+                            </div>
+                            <div className="text-3xl font-bold text-slate-800">{stats.totalBudget.toLocaleString()} <span className="text-sm font-normal text-slate-500">만원</span></div>
+                        </div>
+                        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                            <div className="flex items-center space-x-3 text-slate-600 mb-2">
+                                <TrendingUp size={20} className="text-indigo-600" />
+                                <span className="font-medium">평균 진도율</span>
+                            </div>
+                            <div className="text-3xl font-bold text-slate-800">{stats.avgProgress}%</div>
+                        </div>
+                        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                            <div className="flex items-center space-x-3 text-slate-600 mb-2">
+                                <AlertCircle size={20} className="text-red-500" />
+                                <span className="font-medium">지연 과제</span>
+                            </div>
+                            <div className={`text-3xl font-bold ${stats.delayedCount > 0 ? 'text-red-600' : 'text-slate-800'}`}>{stats.delayedCount} <span className="text-sm font-normal text-slate-500">건</span></div>
+                        </div>
+                    </div>
+
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                        <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center">
+                            <CheckCircle2 className="mr-2 text-blue-600" size={20} />
+                            최근 업데이트 현황
+                        </h3>
+                        {tasks.length === 0 ? (
+                            <div className="text-center py-12 text-slate-400 bg-slate-50 rounded-lg border border-dashed border-slate-200">
+                                <p className="mb-4 text-lg">아직 등록된 과제가 없습니다.</p>
+                                <button onClick={uploadPdfDataToDb} className="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold transition-colors inline-flex items-center shadow-lg shadow-blue-200">
+                                    <UploadCloud size={18} className="mr-2" /> PDF 과제 데이터 업로드
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr className="border-b border-slate-200 text-slate-500 text-sm">
+                                            <th className="py-3 font-medium">과제명</th>
+                                            <th className="py-3 font-medium">책임자</th>
+                                            <th className="py-3 font-medium">부서</th>
+                                            <th className="py-3 font-medium">최근 상태</th>
+                                            <th className="py-3 font-medium">진도율</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {tasks.slice(0, 5).
