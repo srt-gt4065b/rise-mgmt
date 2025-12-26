@@ -5,27 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RISE 사업 진도관리 시스템</title>
     
-    <!-- Tailwind CSS -->
+    <!-- 1. Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- React & ReactDOM -->
+    <!-- 2. React & ReactDOM (UMD) -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     
-    <!-- Babel (JSX 실행용) -->
+    <!-- 3. Babel (JSX 변환용) -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <!-- 스타일 정의 -->
+    <!-- 4. Firebase SDK (Compat Ver. - 가장 안정적) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
         body { font-family: 'Pretendard', sans-serif; }
-        
-        /* 스크롤바 커스텀 */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #f1f5f9; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        
         .animate-fade-in { animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
@@ -34,24 +35,26 @@
 
     <div id="root"></div>
 
-    <!-- React 로직 -->
-    <script type="text/babel" data-type="module">
-        import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, serverTimestamp, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        
-        // Lucide React Icons (ESM)
-        import { 
-            LayoutDashboard, CalendarRange, Plus, Save, Trash2, 
-            ChevronLeft, ChevronRight, PieChart, TrendingUp, 
-            AlertCircle, CheckCircle2, FileText, MoreVertical, 
-            X, UploadCloud, RefreshCw 
-        } from "https://esm.sh/lucide-react@0.292.0?external=react";
+    <script type="text/babel">
+        // --- 1. 아이콘 컴포넌트 (외부 라이브러리 의존성 제거) ---
+        const Icons = {
+            LayoutDashboard: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>,
+            CalendarRange: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/><path d="M17 14h-6"/><path d="M13 18H7"/><path d="M7 14h.01"/><path d="M17 18h.01"/></svg>,
+            Plus: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>,
+            Trash2: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>,
+            PieChart: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>,
+            TrendingUp: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>,
+            AlertCircle: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>,
+            CheckCircle2: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>,
+            FileText: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><line x1="10" x2="8" y1="9" y2="9"/></svg>,
+            X: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>,
+            UploadCloud: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/></svg>,
+            RefreshCw: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+        };
 
-        const React = window.React;
         const { useState, useEffect, useMemo } = React;
 
-        // --- Firebase Configuration ---
+        // --- 2. Firebase 초기화 (안전 장치 추가) ---
         const firebaseConfig = {
             apiKey: "AIzaSyAzLM-AkgRvGwluyyFDnJOFzP1uOjuPwMY",
             authDomain: "rise-mgmt.firebaseapp.com",
@@ -61,54 +64,35 @@
             appId: "1:115181331450:web:d94636a430ccd069b1ba43"
         };
 
-        // 앱 초기화
+        // 앱이 이미 있는지 확인 후 초기화
         let app;
-        try {
-            app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-        } catch(e) { console.error("Firebase init error", e); }
+        let db;
+        let auth;
         
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        // 독립 실행환경이므로 고정된 ID 사용
-        const appId = 'rise-standalone-app';
-
-        // --- Utils ---
-        const generateMonthRange = (start, end) => {
-            const dates = [];
-            let current = new Date(start);
-            const endDate = new Date(end);
-            while (current <= endDate) {
-                const year = current.getFullYear();
-                const month = String(current.getMonth() + 1).padStart(2, '0');
-                dates.push(`${year}-${month}`);
-                current.setMonth(current.getMonth() + 1);
+        try {
+            if (!firebase.apps.length) {
+                app = firebase.initializeApp(firebaseConfig);
+            } else {
+                app = firebase.app();
             }
-            return dates;
-        };
+            db = firebase.firestore();
+            auth = firebase.auth();
+        } catch (e) {
+            console.error("Firebase Init Error:", e);
+            alert("Firebase 연결 실패: " + e.message);
+        }
 
-        const PROJECT_MONTHS = generateMonthRange('2026-03-01', '2027-12-01');
+        const appId = 'rise-standalone-app'; // 고정 앱 ID 사용
 
-        const getStatusColor = (status) => {
-            switch (status) {
-                case 'completed': return 'bg-green-500 text-white';
-                case 'in-progress': return 'bg-blue-500 text-white';
-                case 'delayed': return 'bg-red-500 text-white';
-                case 'planned': return 'bg-gray-300 text-gray-700';
-                default: return 'bg-gray-50 text-gray-300';
-            }
-        };
+        // --- 3. 데이터 및 유틸 ---
+        const PROJECT_MONTHS = [];
+        const start = new Date('2026-03-01');
+        const end = new Date('2027-12-01');
+        while(start <= end) {
+            PROJECT_MONTHS.push(`${start.getFullYear()}-${String(start.getMonth()+1).padStart(2,'0')}`);
+            start.setMonth(start.getMonth()+1);
+        }
 
-        const getStatusLabel = (status) => {
-            switch (status) {
-                case 'completed': return '완료';
-                case 'in-progress': return '진행중';
-                case 'delayed': return '지연';
-                case 'planned': return '계획';
-                default: return '-';
-            }
-        };
-
-        // --- PDF Source Data ---
         const PDF_SOURCE_DATA = [
             {
                 "title": "RISE 융합 캡스톤 디자인 (기업연계)",
@@ -195,13 +179,7 @@
             }
         ];
 
-        // --- Components ---
-        const StatusBadge = ({ status }) => (
-            <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(status).replace('bg-', 'bg-opacity-20 text-').replace('text-white', 'text-gray-800')}`}>
-                {getStatusLabel(status)}
-            </span>
-        );
-
+        // --- 4. Main Component ---
         function RiseProjectManager() {
             const [user, setUser] = useState(null);
             const [tasks, setTasks] = useState([]);
@@ -209,190 +187,170 @@
             const [errorMsg, setErrorMsg] = useState(null);
             const [view, setView] = useState('dashboard');
             
-            // Modal States
+            // UI States
             const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
             const [editingTask, setEditingTask] = useState(null);
             const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
             const [selectedCell, setSelectedCell] = useState(null);
+            const [formData, setFormData] = useState({ title: '', leader: '', department: '', budget: 0, kpi: '' });
+            const [statusUpdateData, setStatusUpdateData] = useState({ status: 'planned', progress: 0, note: '' });
 
-            // Form States
-            const [formData, setFormData] = useState({
-                title: '', leader: '', department: '', budget: 0, kpi: '',
-            });
-
-            const [statusUpdateData, setStatusUpdateData] = useState({
-                status: 'planned', progress: 0, note: ''
-            });
-
-            // --- Auth & Data Fetching ---
             useEffect(() => {
-                const initAuth = async () => {
-                    try {
-                        await signInAnonymously(auth);
-                    } catch (error) {
-                        console.error("Auth Error:", error);
-                        setErrorMsg(`로그인 실패: ${error.message}`);
-                        setLoading(false);
-                    }
-                };
-                initAuth();
+                // 로그인 시도
+                if(!auth) return;
+                auth.signInAnonymously().catch(e => {
+                    console.error(e);
+                    setErrorMsg("로그인 실패: " + e.message + ". (Firebase Console에서 익명 로그인을 켜주세요)");
+                    setLoading(false);
+                });
 
-                const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-                    setUser(currentUser);
+                const unsubscribe = auth.onAuthStateChanged((u) => {
+                    setUser(u);
+                    if(!u) setLoading(false);
                 });
                 return () => unsubscribe();
             }, []);
 
             useEffect(() => {
-                if (!user) return;
+                if (!user || !db) return;
                 
-                const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'rise_tasks'));
-                
-                const unsubscribe = onSnapshot(q, (snapshot) => {
-                    const taskData = snapshot.docs.map(doc => ({
-                        id: doc.id,
-                        ...doc.data()
-                    }));
-                    setTasks(taskData);
-                    setLoading(false);
-                    setErrorMsg(null);
-                }, (error) => {
-                    console.error("Firestore Error:", error);
-                    setErrorMsg(`데이터 로드 오류: ${error.message} (권한을 확인하세요)`);
-                    setLoading(false);
-                });
+                // 데이터 구독
+                try {
+                    const collectionRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('rise_tasks');
+                    
+                    const unsubscribe = collectionRef.onSnapshot((snapshot) => {
+                        const taskData = snapshot.docs.map(doc => ({
+                            id: doc.id,
+                            ...doc.data()
+                        }));
+                        setTasks(taskData);
+                        setLoading(false);
+                        setErrorMsg(null);
+                    }, (error) => {
+                        console.error("Firestore Error:", error);
+                        if (error.code === 'permission-denied') {
+                            setErrorMsg("권한 오류: Firestore 규칙을 'allow read, write: if true;'로 설정했는지 확인하세요.");
+                        } else {
+                            setErrorMsg("데이터 로드 실패: " + error.message);
+                        }
+                        setLoading(false);
+                    });
 
-                return () => unsubscribe();
+                    return () => unsubscribe();
+                } catch(e) {
+                    setErrorMsg("DB 연결 오류: " + e.message);
+                    setLoading(false);
+                }
             }, [user]);
 
-            // --- Handlers ---
+            // Handlers
             const uploadPdfDataToDb = async () => {
-                if (!user) { alert("로그인 중입니다..."); return; }
-                if (!confirm("PDF 기반 과제 데이터를 업로드하시겠습니까?")) return;
-
+                if(!user) { alert("로그인 중입니다..."); return; }
+                if(!confirm("샘플 데이터를 업로드하시겠습니까?")) return;
                 setLoading(true);
                 try {
-                    const batch = writeBatch(db);
-                    const collectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'rise_tasks');
+                    const batch = db.batch();
+                    const collectionRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('rise_tasks');
                     
-                    PDF_SOURCE_DATA.forEach((data) => {
-                        const newDoc = doc(collectionRef);
-                        batch.set(newDoc, { ...data, createdAt: serverTimestamp() });
+                    PDF_SOURCE_DATA.forEach(data => {
+                        const newDoc = collectionRef.doc();
+                        batch.set(newDoc, { ...data, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
                     });
-                    
                     await batch.commit();
-                    alert("업로드 완료!");
-                } catch (e) {
-                    alert(`실패: ${e.message}`);
+                    alert("업로드 완료");
+                } catch(e) {
+                    alert("오류: " + e.message);
                 } finally {
                     setLoading(false);
                 }
             };
-            
+
             const clearAllData = async () => {
-                if(!confirm("모든 데이터를 삭제하시겠습니까?")) return;
+                if(!confirm("정말 모든 데이터를 삭제하시겠습니까?")) return;
                 setLoading(true);
                 try {
-                    const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'rise_tasks'));
-                    const snapshot = await getDocs(q);
-                    const batch = writeBatch(db);
-                    snapshot.docs.forEach((d) => batch.delete(d.ref));
+                    const collectionRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('rise_tasks');
+                    const snapshot = await collectionRef.get();
+                    const batch = db.batch();
+                    snapshot.docs.forEach(doc => batch.delete(doc.ref));
                     await batch.commit();
                     alert("삭제 완료");
                 } catch(e) {
-                    alert(`삭제 실패: ${e.message}`);
+                    alert("오류: " + e.message);
                 } finally {
                     setLoading(false);
                 }
             };
 
             const handleSaveTask = async () => {
-                if (!user) return;
+                if(!user) return;
                 try {
-                    const collectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'rise_tasks');
-                    if (editingTask) {
-                        await updateDoc(doc(collectionRef, editingTask.id), {
-                            ...formData, budget: Number(formData.budget)
-                        });
+                    const collectionRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('rise_tasks');
+                    if(editingTask) {
+                        await collectionRef.doc(editingTask.id).update({ ...formData, budget: Number(formData.budget) });
                     } else {
-                        await addDoc(collectionRef, {
+                        await collectionRef.add({
                             ...formData,
                             budget: Number(formData.budget),
-                            startDate: '2026-03-01', endDate: '2027-12-31',
-                            monthlyData: {}, createdAt: serverTimestamp()
+                            startDate: '2026-03-01', endDate: '2027-12-31', monthlyData: {},
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
                         });
                     }
                     closeTaskModal();
-                } catch (e) { alert("저장 실패"); }
+                } catch(e) { alert("저장 실패: " + e.message); }
             };
 
             const handleDeleteTask = async (id) => {
-                if (!confirm('삭제하시겠습니까?')) return;
+                if(!confirm("삭제하시겠습니까?")) return;
                 try {
-                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'rise_tasks', id));
-                } catch (e) { console.error(e); }
+                    await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('rise_tasks').doc(id).delete();
+                } catch(e) { console.error(e); }
             };
 
             const handleUpdateStatus = async () => {
-                if (!selectedCell) return;
+                if(!selectedCell) return;
                 try {
                     const task = tasks.find(t => t.id === selectedCell.taskId);
-                    const updatedMonthlyData = {
-                        ...task.monthlyData,
-                        [selectedCell.month]: {
-                            status: statusUpdateData.status,
-                            progress: Number(statusUpdateData.progress),
-                            note: statusUpdateData.note
-                        }
+                    const updatedData = { ...task.monthlyData };
+                    updatedData[selectedCell.month] = {
+                        status: statusUpdateData.status,
+                        progress: Number(statusUpdateData.progress),
+                        note: statusUpdateData.note
                     };
-                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'rise_tasks', selectedCell.taskId), {
-                        monthlyData: updatedMonthlyData
+                    await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('rise_tasks').doc(task.id).update({
+                        monthlyData: updatedData
                     });
                     setIsUpdateModalOpen(false);
-                    setSelectedCell(null);
-                } catch (e) { console.error(e); }
+                } catch(e) { console.error(e); }
             };
 
-            // --- Helpers ---
+            // Helpers & Stats
             const openTaskModal = (task = null) => {
                 setEditingTask(task);
                 setFormData(task ? {
-                    title: task.title, leader: task.leader, department: task.department,
-                    budget: task.budget, kpi: task.kpi
+                    title: task.title, leader: task.leader, department: task.department, budget: task.budget, kpi: task.kpi
                 } : { title: '', leader: '', department: '', budget: 0, kpi: '' });
                 setIsTaskModalOpen(true);
             };
-
-            const closeTaskModal = () => {
-                setIsTaskModalOpen(false);
-                setEditingTask(null);
-            };
-
+            const closeTaskModal = () => { setIsTaskModalOpen(false); setEditingTask(null); };
+            
             const openStatusModal = (task, month) => {
                 const currentData = task.monthlyData?.[month] || { status: 'none', progress: 0, note: '' };
                 setSelectedCell({ taskId: task.id, month });
-                setStatusUpdateData({
-                    status: currentData.status === 'none' ? 'planned' : currentData.status,
-                    progress: currentData.progress || 0,
-                    note: currentData.note || ''
-                });
+                setStatusUpdateData({ status: currentData.status === 'none' ? 'planned' : currentData.status, progress: currentData.progress || 0, note: currentData.note || '' });
                 setIsUpdateModalOpen(true);
             };
 
             const stats = useMemo(() => {
                 const totalTasks = tasks.length;
                 const totalBudget = tasks.reduce((sum, t) => sum + (t.budget || 0), 0);
-                let totalProgressSum = 0;
-                let activeTaskCount = 0;
-                let delayedCount = 0;
-
+                let totalProgressSum = 0, activeTaskCount = 0, delayedCount = 0;
                 tasks.forEach(task => {
                     const months = Object.keys(task.monthlyData || {}).sort();
-                    if (months.length > 0) {
-                        const lastMonth = months[months.length - 1];
-                        const data = task.monthlyData[lastMonth];
-                        totalProgressSum += data.progress;
-                        if (data.status === 'delayed') delayedCount++;
+                    if(months.length > 0) {
+                        const lastData = task.monthlyData[months[months.length-1]];
+                        totalProgressSum += lastData.progress;
+                        if(lastData.status === 'delayed') delayedCount++;
                         activeTaskCount++;
                     }
                 });
@@ -400,63 +358,275 @@
                 return { totalTasks, totalBudget, avgProgress, delayedCount };
             }, [tasks]);
 
-            // --- Renders ---
-            const renderDashboard = () => (
-                <div className="space-y-6 animate-fade-in">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                            <div className="flex items-center space-x-3 text-slate-600 mb-2">
-                                <LayoutDashboard size={20} className="text-blue-600" />
-                                <span className="font-medium">총 과제 수</span>
+            // Rendering
+            const getStatusColor = (s) => {
+                if(s==='completed') return 'bg-green-500 text-white';
+                if(s==='in-progress') return 'bg-blue-500 text-white';
+                if(s==='delayed') return 'bg-red-500 text-white';
+                if(s==='planned') return 'bg-gray-300 text-gray-700';
+                return 'bg-gray-50 text-gray-300';
+            };
+            const getStatusLabel = (s) => {
+                if(s==='completed') return '완료';
+                if(s==='in-progress') return '진행중';
+                if(s==='delayed') return '지연';
+                if(s==='planned') return '계획';
+                return '-';
+            };
+            
+            // --- UI 렌더링 ---
+            return (
+                <div className="min-h-screen">
+                    {/* Header */}
+                    <header className="bg-white border-b border-slate-200 sticky top-0 z-40">
+                        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                                <div className="bg-blue-600 text-white p-2 rounded-lg font-bold shadow-lg shadow-blue-200">RISE</div>
+                                <h1 className="text-xl font-bold text-slate-800 hidden md:block">단일과제 진도관리 시스템</h1>
+                                <span className="bg-slate-100 text-slate-500 text-xs px-2 py-1 rounded">2026.03 ~ 2027.12</span>
                             </div>
-                            <div className="text-3xl font-bold text-slate-800">{stats.totalTasks} <span className="text-sm font-normal text-slate-500">건</span></div>
-                        </div>
-                        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                            <div className="flex items-center space-x-3 text-slate-600 mb-2">
-                                <PieChart size={20} className="text-green-600" />
-                                <span className="font-medium">총 예산 규모</span>
-                            </div>
-                            <div className="text-3xl font-bold text-slate-800">{stats.totalBudget.toLocaleString()} <span className="text-sm font-normal text-slate-500">만원</span></div>
-                        </div>
-                        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                            <div className="flex items-center space-x-3 text-slate-600 mb-2">
-                                <TrendingUp size={20} className="text-indigo-600" />
-                                <span className="font-medium">평균 진도율</span>
-                            </div>
-                            <div className="text-3xl font-bold text-slate-800">{stats.avgProgress}%</div>
-                        </div>
-                        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                            <div className="flex items-center space-x-3 text-slate-600 mb-2">
-                                <AlertCircle size={20} className="text-red-500" />
-                                <span className="font-medium">지연 과제</span>
-                            </div>
-                            <div className={`text-3xl font-bold ${stats.delayedCount > 0 ? 'text-red-600' : 'text-slate-800'}`}>{stats.delayedCount} <span className="text-sm font-normal text-slate-500">건</span></div>
-                        </div>
-                    </div>
-
-                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                        <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center">
-                            <CheckCircle2 className="mr-2 text-blue-600" size={20} />
-                            최근 업데이트 현황
-                        </h3>
-                        {tasks.length === 0 ? (
-                            <div className="text-center py-12 text-slate-400 bg-slate-50 rounded-lg border border-dashed border-slate-200">
-                                <p className="mb-4 text-lg">아직 등록된 과제가 없습니다.</p>
-                                <button onClick={uploadPdfDataToDb} className="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold transition-colors inline-flex items-center shadow-lg shadow-blue-200">
-                                    <UploadCloud size={18} className="mr-2" /> PDF 과제 데이터 업로드
+                            <div className="flex items-center space-x-2">
+                                <nav className="flex bg-slate-100 p-1 rounded-lg mr-4">
+                                    {['dashboard', 'timeline', 'list'].map(v => (
+                                        <button key={v} onClick={() => setView(v)} className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${view === v ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+                                            {v === 'dashboard' ? '대시보드' : v === 'timeline' ? '월별 진도표' : '과제 관리'}
+                                        </button>
+                                    ))}
+                                </nav>
+                                <button onClick={uploadPdfDataToDb} className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-medium flex items-center shadow-sm">
+                                    <Icons.UploadCloud className="w-4 h-4 mr-1"/> 업로드
                                 </button>
+                                <button onClick={() => openTaskModal()} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center shadow-md">
+                                    <Icons.Plus className="w-4 h-4 mr-1"/> 추가
+                                </button>
+                                {tasks.length > 0 && (
+                                    <button onClick={clearAllData} className="text-red-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-lg">
+                                        <Icons.Trash2 className="w-4 h-4"/>
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    </header>
+
+                    <main className="max-w-7xl mx-auto px-4 py-8">
+                        {errorMsg && (
+                            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6 flex items-start">
+                                <Icons.AlertCircle className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" />
+                                <div>
+                                    <p className="font-bold">시스템 오류</p>
+                                    <p className="text-sm">{errorMsg}</p>
+                                </div>
+                            </div>
+                        )}
+
+                        {loading ? (
+                            <div className="flex justify-center items-center h-64 text-slate-500">
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4 mr-2"></div>
+                                로딩중...
                             </div>
                         ) : (
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left border-collapse">
-                                    <thead>
-                                        <tr className="border-b border-slate-200 text-slate-500 text-sm">
-                                            <th className="py-3 font-medium">과제명</th>
-                                            <th className="py-3 font-medium">책임자</th>
-                                            <th className="py-3 font-medium">부서</th>
-                                            <th className="py-3 font-medium">최근 상태</th>
-                                            <th className="py-3 font-medium">진도율</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {tasks.slice(0, 5).
+                            <>
+                                {/* Dashboard View */}
+                                {view === 'dashboard' && (
+                                    <div className="space-y-6 animate-fade-in">
+                                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                            {[
+                                                { icon: Icons.LayoutDashboard, color: 'text-blue-600', label: '총 과제 수', value: `${stats.totalTasks} 건` },
+                                                { icon: Icons.PieChart, color: 'text-green-600', label: '총 예산 규모', value: `${stats.totalBudget.toLocaleString()} 만원` },
+                                                { icon: Icons.TrendingUp, color: 'text-indigo-600', label: '평균 진도율', value: `${stats.avgProgress}%` },
+                                                { icon: Icons.AlertCircle, color: 'text-red-500', label: '지연 과제', value: `${stats.delayedCount} 건`, isError: stats.delayedCount > 0 }
+                                            ].map((item, idx) => (
+                                                <div key={idx} className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                                                    <div className="flex items-center space-x-3 text-slate-600 mb-2">
+                                                        <item.icon className={`w-5 h-5 ${item.color}`} />
+                                                        <span className="font-medium">{item.label}</span>
+                                                    </div>
+                                                    <div className={`text-3xl font-bold ${item.isError ? 'text-red-600' : 'text-slate-800'}`}>{item.value}</div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                                            <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center">
+                                                <Icons.CheckCircle2 className="w-5 h-5 mr-2 text-blue-600" /> 최근 업데이트 현황
+                                            </h3>
+                                            {tasks.length === 0 ? (
+                                                <div className="text-center py-12 text-slate-400 bg-slate-50 rounded-lg border border-dashed border-slate-200">
+                                                    데이터가 없습니다. 우측 상단 '업로드' 버튼을 눌러보세요.
+                                                </div>
+                                            ) : (
+                                                <div className="overflow-x-auto">
+                                                    <table className="w-full text-left border-collapse">
+                                                        <thead>
+                                                            <tr className="border-b border-slate-200 text-slate-500 text-sm">
+                                                                <th className="py-3 font-medium">과제명</th>
+                                                                <th className="py-3 font-medium">책임자</th>
+                                                                <th className="py-3 font-medium">부서</th>
+                                                                <th className="py-3 font-medium">최근 상태</th>
+                                                                <th className="py-3 font-medium">진도율</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {tasks.slice(0, 5).map(task => {
+                                                                const months = Object.keys(task.monthlyData || {}).sort();
+                                                                const lastMonth = months.length > 0 ? months[months.length - 1] : null;
+                                                                const data = lastMonth ? task.monthlyData[lastMonth] : null;
+                                                                return (
+                                                                    <tr key={task.id} className="border-b border-slate-100 hover:bg-slate-50">
+                                                                        <td className="py-3 text-slate-800 font-medium">{task.title}</td>
+                                                                        <td className="py-3 text-slate-600">{task.leader}</td>
+                                                                        <td className="py-3 text-slate-600">{task.department}</td>
+                                                                        <td className="py-3">{data ? <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(data.status).replace('bg-','bg-opacity-20 text-').replace('text-white','text-gray-800')}`}>{getStatusLabel(data.status)}</span> : '-'}</td>
+                                                                        <td className="py-3">{data ? `${data.progress}%` : '0%'}</td>
+                                                                    </tr>
+                                                                );
+                                                            })}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Timeline View */}
+                                {view === 'timeline' && (
+                                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col h-[calc(100vh-200px)] animate-fade-in">
+                                        <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50 rounded-t-xl">
+                                            <div className="flex items-center space-x-2">
+                                                <Icons.CalendarRange className="text-blue-600 w-5 h-5" />
+                                                <h3 className="font-bold text-slate-800">월별 상세 진도표</h3>
+                                            </div>
+                                            <div className="flex space-x-2 text-xs text-slate-500">
+                                                <div className="flex items-center"><div className="w-3 h-3 bg-gray-300 rounded mr-1"></div>계획</div>
+                                                <div className="flex items-center"><div className="w-3 h-3 bg-blue-500 rounded mr-1"></div>진행</div>
+                                                <div className="flex items-center"><div className="w-3 h-3 bg-green-500 rounded mr-1"></div>완료</div>
+                                                <div className="flex items-center"><div className="w-3 h-3 bg-red-500 rounded mr-1"></div>지연</div>
+                                            </div>
+                                        </div>
+                                        <div className="flex-1 overflow-auto relative">
+                                            <table className="w-max border-collapse">
+                                                <thead className="sticky top-0 z-20 bg-white shadow-sm">
+                                                    <tr>
+                                                        <th className="sticky left-0 z-30 bg-white border-b border-r border-slate-200 p-3 w-64 text-left font-bold text-slate-700 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">과제명</th>
+                                                        {PROJECT_MONTHS.map(month => (
+                                                            <th key={month} className="border-b border-r border-slate-200 p-2 min-w-[80px] text-center text-xs font-medium text-slate-600 bg-slate-50">{month}</th>
+                                                        ))}
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {tasks.map(task => (
+                                                        <tr key={task.id} className="hover:bg-slate-50">
+                                                            <td className="sticky left-0 z-10 bg-white border-b border-r border-slate-200 p-3 w-64 text-sm font-medium text-slate-800 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] truncate" title={task.title}>
+                                                                <div className="flex flex-col"><span className="truncate">{task.title}</span><span className="text-xs text-slate-400">{task.leader}</span></div>
+                                                            </td>
+                                                            {PROJECT_MONTHS.map(month => {
+                                                                const data = task.monthlyData?.[month];
+                                                                const status = data?.status || 'none';
+                                                                return (
+                                                                    <td key={month} onClick={() => openStatusModal(task, month)} className="border-b border-r border-slate-200 p-1 text-center cursor-pointer hover:bg-slate-100">
+                                                                        {status !== 'none' ? (
+                                                                            <div className={`w-full h-8 rounded flex items-center justify-center text-xs text-white shadow-sm ${getStatusColor(status)}`}>{data?.progress > 0 && `${data.progress}%`}</div>
+                                                                        ) : <div className="w-full h-8 rounded border border-dashed border-slate-200 flex items-center justify-center text-slate-300 text-[10px] hover:border-blue-300">+</div>}
+                                                                    </td>
+                                                                );
+                                                            })}
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* List View */}
+                                {view === 'list' && (
+                                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden animate-fade-in">
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-left">
+                                                <thead className="bg-slate-50 border-b border-slate-200">
+                                                    <tr><th className="p-4 font-semibold text-slate-600">과제명</th><th className="p-4 font-semibold text-slate-600">소속/책임자</th><th className="p-4 font-semibold text-slate-600">예산</th><th className="p-4 font-semibold text-slate-600">KPI</th><th className="p-4 font-semibold text-slate-600 text-right">관리</th></tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-slate-100">
+                                                    {tasks.map(task => (
+                                                        <tr key={task.id} className="hover:bg-slate-50">
+                                                            <td className="p-4 font-medium text-slate-800">{task.title}</td>
+                                                            <td className="p-4 text-slate-600"><div className="text-sm">{task.department}</div><div className="text-xs text-slate-400">{task.leader}</div></td>
+                                                            <td className="p-4 text-slate-600 font-mono">{task.budget.toLocaleString()}</td>
+                                                            <td className="p-4 text-slate-600 text-sm max-w-xs truncate">{task.kpi}</td>
+                                                            <td className="p-4 text-right space-x-2">
+                                                                <button onClick={() => openTaskModal(task)} className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg"><Icons.FileText className="w-4 h-4"/></button>
+                                                                <button onClick={() => handleDeleteTask(task.id)} className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg"><Icons.Trash2 className="w-4 h-4"/></button>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    </main>
+
+                    {/* Modals */}
+                    {isTaskModalOpen && (
+                        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+                            <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden">
+                                <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                                    <h3 className="font-bold text-lg text-slate-800">{editingTask ? '과제 정보 수정' : '새 과제 등록'}</h3>
+                                    <button onClick={closeTaskModal} className="text-slate-400 hover:text-slate-600"><Icons.X className="w-5 h-5"/></button>
+                                </div>
+                                <div className="p-6 space-y-4">
+                                    <div><label className="block text-sm font-medium text-slate-700 mb-1">과제명</label><input type="text" value={formData.title} onChange={e=>setFormData({...formData,title:e.target.value})} className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"/></div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div><label className="block text-sm font-medium text-slate-700 mb-1">소속</label><input type="text" value={formData.department} onChange={e=>setFormData({...formData,department:e.target.value})} className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"/></div>
+                                        <div><label className="block text-sm font-medium text-slate-700 mb-1">책임자</label><input type="text" value={formData.leader} onChange={e=>setFormData({...formData,leader:e.target.value})} className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"/></div>
+                                    </div>
+                                    <div><label className="block text-sm font-medium text-slate-700 mb-1">예산 (만원)</label><input type="number" value={formData.budget} onChange={e=>setFormData({...formData,budget:e.target.value})} className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"/></div>
+                                    <div><label className="block text-sm font-medium text-slate-700 mb-1">KPI</label><textarea value={formData.kpi} onChange={e=>setFormData({...formData,kpi:e.target.value})} className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500 h-24 resize-none"/></div>
+                                </div>
+                                <div className="p-5 border-t border-slate-100 flex justify-end space-x-2 bg-slate-50">
+                                    <button onClick={closeTaskModal} className="px-4 py-2 text-slate-600 hover:bg-slate-200 rounded-lg font-medium">취소</button>
+                                    <button onClick={handleSaveTask} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">저장</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    {isUpdateModalOpen && (
+                        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+                            <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden">
+                                <div className="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                                    <h3 className="font-bold text-slate-800">{selectedCell?.month} 진도 관리</h3>
+                                    <button onClick={() => setIsUpdateModalOpen(false)} className="text-slate-400 hover:text-slate-600"><Icons.X className="w-5 h-5"/></button>
+                                </div>
+                                <div className="p-6 space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">상태</label>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            {['planned','in-progress','completed','delayed'].map(s=>(
+                                                <button key={s} onClick={()=>setStatusUpdateData({...statusUpdateData,status:s})} className={`py-2 px-3 rounded-lg text-sm font-medium border ${statusUpdateData.status===s ? 'border-blue-500 bg-blue-50 text-blue-700 ring-1 ring-blue-500' : 'border-slate-200 text-slate-600'}`}>{getStatusLabel(s)}</button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-1">진도율 ({statusUpdateData.progress}%)</label>
+                                        <input type="range" min="0" max="100" step="10" value={statusUpdateData.progress} onChange={e=>setStatusUpdateData({...statusUpdateData,progress:Number(e.target.value)})} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"/>
+                                    </div>
+                                    <div><label className="block text-sm font-medium text-slate-700 mb-1">특이사항</label><textarea value={statusUpdateData.note} onChange={e=>setStatusUpdateData({...statusUpdateData,note:e.target.value})} className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500 h-20 resize-none"/></div>
+                                </div>
+                                <div className="p-4 border-t border-slate-100 flex justify-end space-x-2 bg-slate-50">
+                                    <button onClick={() => setIsUpdateModalOpen(false)} className="px-4 py-2 text-slate-600 hover:bg-slate-200 rounded-lg">취소</button>
+                                    <button onClick={handleUpdateStatus} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">업데이트</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<RiseProjectManager />);
+    </script>
+</body>
+</html>
