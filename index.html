@@ -94,90 +94,197 @@
         }
 
         const PDF_SOURCE_DATA = [
-            {
-                "title": "RISE 융합 캡스톤 디자인 (기업연계)",
-                "leader": "김창업 교수",
-                "department": "산학협력단",
-                "budget": 8000,
-                "kpi": "시제품 제작 20건, 특허출원 5건, 기업 애로기술 해결 10건",
-                "startDate": "2026-03-01",
-                "endDate": "2026-12-31",
-                "monthlyData": {
-                "2026-03": { "status": "planned", "progress": 0, "note": "참여 학생 및 기업 모집" },
-                "2026-04": { "status": "planned", "progress": 0, "note": "팀 매칭 및 주제 선정" },
-                "2026-06": { "status": "planned", "progress": 0, "note": "중간 점검 및 멘토링" },
-                "2026-11": { "status": "planned", "progress": 0, "note": "최종 성과 전시회" }
-                }
-            },
-            {
-                "title": "대전 공공기술 활용 아이디어 경진대회",
-                "leader": "이혁신 팀장",
-                "department": "창업지원단",
-                "budget": 3500,
-                "kpi": "참가팀 50팀, 수상작 사업화 연계 3건",
-                "startDate": "2026-05-01",
-                "endDate": "2026-10-31",
-                "monthlyData": {
-                "2026-05": { "status": "planned", "progress": 0, "note": "공공데이터/기술 리스트업" },
-                "2026-08": { "status": "planned", "progress": 0, "note": "경진대회 예선 심사" },
-                "2026-10": { "status": "planned", "progress": 0, "note": "본선 및 시상식" }
-                }
-            },
-            {
-                "title": "표준 현장실습 및 취업 연계 지원",
-                "leader": "박취업 센터장",
-                "department": "현장실습지원센터",
-                "budget": 12000,
-                "kpi": "실습생 100명 파견, 실습 후 취업 연계율 40%",
-                "startDate": "2026-03-01",
-                "endDate": "2027-12-31",
-                "monthlyData": {
-                "2026-03": { "status": "in-progress", "progress": 20, "note": "1학기 실습생 모집 및 사전교육" },
-                "2026-07": { "status": "planned", "progress": 0, "note": "하계 단기 실습 운영" },
-                "2026-09": { "status": "planned", "progress": 0, "note": "2학기 실습생 파견" },
-                "2027-01": { "status": "planned", "progress": 0, "note": "동계 실습 운영" }
-                }
-            },
-            {
-                "title": "글로벌 공동교육 과정 (해외 대학 연계)",
-                "leader": "정글로벌 교수",
-                "department": "국제교류원",
-                "budget": 15000,
-                "kpi": "해외 대학 학점 교류 20명, 글로벌 프로젝트 2건",
-                "startDate": "2026-03-01",
-                "endDate": "2027-02-28",
-                "monthlyData": {
-                "2026-03": { "status": "planned", "progress": 10, "note": "협정 대학 커리큘럼 조율" },
-                "2026-07": { "status": "planned", "progress": 0, "note": "하계 글로벌 캠프 파견" }
-                }
-            },
-            {
-                "title": "출연연 연계 특화 교과 운영 (바이오/반도체)",
-                "leader": "최연구 박사",
-                "department": "융합대학원",
-                "budget": 6000,
-                "kpi": "전문가 특강 10회, 출연연 인턴십 5명",
-                "startDate": "2026-03-01",
-                "endDate": "2026-12-31",
-                "monthlyData": {
-                "2026-04": { "status": "planned", "progress": 0, "note": "연구원 겸임교수 위촉" },
-                "2026-09": { "status": "planned", "progress": 0, "note": "2학기 심화 과정 개설" }
-                }
-            },
-            {
-                "title": "지역 정주형 취업 동아리 육성",
-                "leader": "한지역 과장",
-                "department": "대학일자리본부",
-                "budget": 2500,
-                "kpi": "동아리 20개 팀 운영, 지역 기업 취업 30명",
-                "startDate": "2026-03-01",
-                "endDate": "2027-12-31",
-                "monthlyData": {
-                "2026-03": { "status": "completed", "progress": 100, "note": "동아리 모집 및 선정 완료" },
-                "2026-05": { "status": "in-progress", "progress": 40, "note": "기업 탐방 및 멘토링 진행" }
-                }
-            }
-        ];
+  {
+    "title": "RISE 기업연계 융합 캡스톤 디자인",
+    "leader": "산학협력단장",
+    "department": "산학협력단",
+    "budget": 10000,
+    "kpi": "시제품 제작 20건, 특허출원 5건, 기업 애로기술 해결 10건",
+    "startDate": "2026-03-01",
+    "endDate": "2026-12-31",
+    "monthlyData": {
+      "2026-03": { "status": "planned", "progress": 0, "note": "참여 학생 및 기업 모집" },
+      "2026-06": { "status": "planned", "progress": 0, "note": "중간 점검" },
+      "2026-11": { "status": "planned", "progress": 0, "note": "성과 전시회" }
+    }
+  },
+  {
+    "title": "대전 공공데이터 활용 아이디어 공모전",
+    "leader": "창업지원단장",
+    "department": "창업지원단",
+    "budget": 4500,
+    "kpi": "참가팀 50팀, 수상작 사업화 3건",
+    "startDate": "2026-05-01",
+    "endDate": "2026-10-31",
+    "monthlyData": {
+      "2026-05": { "status": "planned", "progress": 0, "note": "공고 및 접수" },
+      "2026-10": { "status": "planned", "progress": 0, "note": "본선 및 시상" }
+    }
+  },
+  {
+    "title": "표준 현장실습 및 기업 수요 매칭",
+    "leader": "현장실습센터장",
+    "department": "현장실습지원센터",
+    "budget": 15000,
+    "kpi": "실습생 100명, 취업 연계 40%",
+    "startDate": "2026-03-01",
+    "endDate": "2027-12-31",
+    "monthlyData": {
+      "2026-03": { "status": "in-progress", "progress": 20, "note": "1학기 파견" },
+      "2026-09": { "status": "planned", "progress": 0, "note": "2학기 파견" }
+    }
+  },
+  {
+    "title": "글로벌 공동교육 과정 (해외연계)",
+    "leader": "국제교류원장",
+    "department": "국제교류원",
+    "budget": 20000,
+    "kpi": "학점교류 20명, 프로젝트 2건",
+    "startDate": "2026-03-01",
+    "endDate": "2027-02-28",
+    "monthlyData": {
+      "2026-07": { "status": "planned", "progress": 0, "note": "하계 글로벌 캠프" }
+    }
+  },
+  {
+    "title": "출연연 연계 특화 교과 (바이오/반도체)",
+    "leader": "융합대학원장",
+    "department": "융합대학원",
+    "budget": 8000,
+    "kpi": "특강 10회, 인턴십 5명",
+    "startDate": "2026-03-01",
+    "endDate": "2026-12-31",
+    "monthlyData": {
+      "2026-04": { "status": "planned", "progress": 0, "note": "연구원 겸임교수 특강" }
+    }
+  },
+  {
+    "title": "지역 정주형 취업 동아리 육성",
+    "leader": "대학일자리본부장",
+    "department": "대학일자리본부",
+    "budget": 5000,
+    "kpi": "동아리 20팀, 취업 30명",
+    "startDate": "2026-03-01",
+    "endDate": "2027-12-31",
+    "monthlyData": {
+      "2026-03": { "status": "completed", "progress": 100, "note": "동아리 선정 완료" }
+    }
+  },
+  {
+    "title": "스타트업 윙스(Start-up Wings) 캠프",
+    "leader": "창업교육센터장",
+    "department": "창업지원단",
+    "budget": 4000,
+    "kpi": "예비창업자 30명 발굴",
+    "startDate": "2026-06-01",
+    "endDate": "2026-08-31",
+    "monthlyData": {
+      "2026-07": { "status": "planned", "progress": 0, "note": "창업 집중 교육" }
+    }
+  },
+  {
+    "title": "학과별 전공 역량강화 프로그램",
+    "leader": "각 학과장",
+    "department": "전체 학과",
+    "budget": 30000,
+    "kpi": "전공 자격증 취득 100건, 전공 특강 50회",
+    "startDate": "2026-03-01",
+    "endDate": "2027-12-31",
+    "monthlyData": {
+      "2026-04": { "status": "planned", "progress": 0, "note": "학과별 계획 수립" },
+      "2026-05": { "status": "planned", "progress": 0, "note": "전문가 초청 특강" }
+    }
+  },
+  {
+    "title": "학생 창업 주간 (Start-up Week)",
+    "leader": "창업지원단장",
+    "department": "창업지원단",
+    "budget": 2000,
+    "kpi": "참여자 500명, 창업 분위기 확산",
+    "startDate": "2026-10-01",
+    "endDate": "2026-10-31",
+    "monthlyData": {
+      "2026-10": { "status": "planned", "progress": 0, "note": "창업 부스 운영 및 특강" }
+    }
+  },
+  {
+    "title": "취업 연계형 직무 자격증 취득 과정",
+    "leader": "대학일자리본부장",
+    "department": "대학일자리본부",
+    "budget": 6000,
+    "kpi": "자격증 취득 50명, 교육과정 5개 운영",
+    "startDate": "2026-06-01",
+    "endDate": "2027-02-28",
+    "monthlyData": {
+      "2026-06": { "status": "planned", "progress": 0, "note": "하계 자격증 반 개설" },
+      "2026-12": { "status": "planned", "progress": 0, "note": "동계 자격증 반 개설" }
+    }
+  },
+  {
+    "title": "산학협력 성과확산 페어 (Fair)",
+    "leader": "산학협력단장",
+    "department": "산학협력단",
+    "budget": 8000,
+    "kpi": "가족회사 100개사 참여, 성과 전시 50건",
+    "startDate": "2026-11-01",
+    "endDate": "2026-11-30",
+    "monthlyData": {
+      "2026-11": { "status": "planned", "progress": 0, "note": "산학협력 EXPO 개최" }
+    }
+  },
+  {
+    "title": "1:1 진로/취업 상담 및 자기소개서 컨설팅",
+    "leader": "취업지원팀장",
+    "department": "대학일자리본부",
+    "budget": 3000,
+    "kpi": "상담 500회, 자소서 첨삭 200건",
+    "startDate": "2026-03-01",
+    "endDate": "2027-12-31",
+    "monthlyData": {
+      "2026-03": { "status": "in-progress", "progress": 10, "note": "상시 상담 센터 운영" },
+      "2026-09": { "status": "planned", "progress": 0, "note": "하반기 공채 대비 집중 컨설팅" }
+    }
+  },
+  {
+    "title": "지역 우수기업 탐방 및 현장 견학",
+    "leader": "현장실습센터장",
+    "department": "현장실습지원센터",
+    "budget": 2500,
+    "kpi": "기업 탐방 10회, 참여 학생 200명",
+    "startDate": "2026-04-01",
+    "endDate": "2027-11-30",
+    "monthlyData": {
+      "2026-05": { "status": "planned", "progress": 0, "note": "지역 바이오 기업 탐방" },
+      "2026-10": { "status": "planned", "progress": 0, "note": "ICT 기업 현장 견학" }
+    }
+  },
+  {
+    "title": "창업 동아리 발굴 및 육성",
+    "leader": "창업교육센터장",
+    "department": "창업지원단",
+    "budget": 4000,
+    "kpi": "창업 동아리 15팀, 시제품 제작 15건",
+    "startDate": "2026-03-01",
+    "endDate": "2027-12-31",
+    "monthlyData": {
+      "2026-03": { "status": "completed", "progress": 100, "note": "동아리 선발" },
+      "2026-09": { "status": "planned", "progress": 0, "note": "중간 평가 및 멘토링" }
+    }
+  },
+  {
+    "title": "RISE 사업 성과분석 및 포럼",
+    "leader": "기획처장",
+    "department": "기획처",
+    "budget": 2000,
+    "kpi": "성과분석 보고서 2건, 포럼 개최 2회",
+    "startDate": "2026-12-01",
+    "endDate": "2027-12-31",
+    "monthlyData": {
+      "2026-12": { "status": "planned", "progress": 0, "note": "1차년도 성과 분석" },
+      "2027-12": { "status": "planned", "progress": 0, "note": "종합 성과 공유 포럼" }
+    }
+  }
+];
 
         // --- 4. Main Component ---
         function RiseProjectManager() {
